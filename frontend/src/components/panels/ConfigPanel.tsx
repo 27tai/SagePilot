@@ -85,6 +85,43 @@ function HttpRequestConfig({
   )
 }
 
+// ── SendEmail config ──────────────────────────────────────────────────────
+function SendEmailConfig({
+  config,
+  onChange,
+}: {
+  config: Record<string, unknown>
+  onChange: (c: Record<string, unknown>) => void
+}) {
+  return (
+    <>
+      <Field label="Recipient (To)">
+        <input
+          className={INPUT_CLS}
+          type="email"
+          placeholder="user@example.com"
+          value={(config.to as string) ?? ''}
+          onChange={(e) => onChange({ ...config, to: e.target.value })}
+        />
+      </Field>
+
+      <Field label="Subject">
+        <input
+          className={INPUT_CLS}
+          placeholder="Workflow Notification"
+          value={(config.subject as string) ?? ''}
+          onChange={(e) => onChange({ ...config, subject: e.target.value })}
+        />
+      </Field>
+
+      <div className="rounded-lg border border-dashed border-pink-200 p-2 text-xs text-pink-400">
+        The entire incoming payload is sent as the email body (formatted JSON).
+        SMTP credentials are configured via server environment variables.
+      </div>
+    </>
+  )
+}
+
 // ── Wait config ───────────────────────────────────────────────────────────
 function WaitConfig({
   config,
@@ -371,6 +408,9 @@ export default function ConfigPanel() {
       )}
       {nodeType === 'http_request' && (
         <HttpRequestConfig config={config} onChange={handleChange} />
+      )}
+      {nodeType === 'send_email' && (
+        <SendEmailConfig config={config} onChange={handleChange} />
       )}
       {nodeType === 'wait' && (
         <WaitConfig config={config} onChange={handleChange} />

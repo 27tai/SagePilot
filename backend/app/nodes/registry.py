@@ -12,6 +12,7 @@ from .manual_trigger import ManualTriggerNode
 from .webhook_trigger import WebhookTriggerNode
 from .transform_data import TransformDataNode
 from .http_request import HttpRequestNode
+from .send_email import SendEmailNode
 from .wait_node import WaitNode
 from .end_node import EndNode
 from .decision import DecisionNode
@@ -21,6 +22,7 @@ NODE_REGISTRY: dict[str, type[BaseNode]] = {
     WebhookTriggerNode.node_type: WebhookTriggerNode,
     TransformDataNode.node_type: TransformDataNode,
     HttpRequestNode.node_type: HttpRequestNode,
+    SendEmailNode.node_type: SendEmailNode,
     WaitNode.node_type: WaitNode,
     EndNode.node_type: EndNode,
     DecisionNode.node_type: DecisionNode,

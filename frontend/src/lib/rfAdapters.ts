@@ -12,6 +12,7 @@ const NODE_LABELS: Record<string, string> = {
   webhook_trigger: 'Webhook Trigger',
   transform_data: 'Transform Data',
   http_request: 'HTTP Request',
+  send_email: 'Send Email',
   wait: 'Wait',
   decision: 'Decision',
   end: 'End',

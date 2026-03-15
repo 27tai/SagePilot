@@ -3,6 +3,7 @@ export type NodeType =
   | 'webhook_trigger'
   | 'transform_data'
   | 'http_request'
+  | 'send_email'
   | 'wait'
   | 'decision'
   | 'end'

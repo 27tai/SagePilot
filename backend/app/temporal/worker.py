@@ -13,7 +13,10 @@ import asyncio
 import logging
 import os
 
+from dotenv import load_dotenv
 from temporalio.client import Client
+
+load_dotenv()
 from temporalio.worker import Worker
 
 from app.temporal.workflows import WorkflowOrchestrator

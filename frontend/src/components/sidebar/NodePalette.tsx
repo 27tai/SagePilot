@@ -34,6 +34,14 @@ const PALETTE_NODES = [
     text: 'text-blue-700',
   },
   {
+    type: 'send_email',
+    label: 'Send Email',
+    description: 'Emails the payload as JSON to a recipient',
+    color: 'bg-pink-500',
+    border: 'border-pink-300 hover:border-pink-500',
+    text: 'text-pink-700',
+  },
+  {
     type: 'wait',
     label: 'Wait',
     description: 'Pauses execution for a configured duration',
