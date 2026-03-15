@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import Response
 
 from app.models.workflow import (
     WorkflowDefinition,
@@ -62,17 +63,16 @@ async def get_workflow(workflow_id: str) -> WorkflowDefinition:
 
 @router.put("/{workflow_id}", response_model=WorkflowDefinition)
 async def update_workflow(workflow_id: str, workflow: WorkflowDefinition) -> WorkflowDefinition:
-    existing = workflow_repo.get(workflow_id)
-    if not existing:
-        raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found.")
+    # Upsert: create if not present (handles backend restarts clearing in-memory store)
     workflow.id = workflow_id  # ensure ID consistency
     return workflow_repo.save(workflow)
 
 
-@router.delete("/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_workflow(workflow_id: str) -> None:
+@router.delete("/{workflow_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+async def delete_workflow(workflow_id: str) -> Response:
     if not workflow_repo.delete(workflow_id):
         raise HTTPException(status_code=404, detail=f"Workflow '{workflow_id}' not found.")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # ---------------------------------------------------------------------------
