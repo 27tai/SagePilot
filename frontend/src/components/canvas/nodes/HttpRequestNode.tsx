@@ -5,7 +5,6 @@ import { Handle, Position, type NodeProps } from 'reactflow'
 import type { RFNodeData } from '@/lib/rfAdapters'
 
 function HttpRequestNode({ data, selected }: NodeProps<RFNodeData>) {
-  const method = (data.config.method as string) || 'GET'
   const url = (data.config.url as string) || '(no URL set)'
 
   return (
@@ -24,7 +23,7 @@ function HttpRequestNode({ data, selected }: NodeProps<RFNodeData>) {
         <p className="text-sm font-medium text-gray-800">{data.label}</p>
         <p className="mt-1 flex items-center gap-1.5">
           <span className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs font-bold text-blue-700">
-            {method}
+            POST
           </span>
           <span className="max-w-[120px] truncate font-mono text-xs text-gray-500">{url}</span>
         </p>

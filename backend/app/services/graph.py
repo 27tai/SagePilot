@@ -15,7 +15,7 @@ from collections import defaultdict, deque
 from typing import Any
 
 from app.models.workflow import WorkflowDefinition
-from app.nodes.registry import NODE_REGISTRY
+from app.nodes.registry import NODE_REGISTRY, get_node
 
 # Node types considered valid entry points
 TRIGGER_TYPES = {"manual_trigger", "webhook_trigger"}
@@ -39,7 +39,8 @@ def validate_workflow(workflow: WorkflowDefinition) -> None:
     - No disconnected nodes (every non-trigger node reachable from trigger;
       every node with no outgoing edge is an end node)
     - All node types are registered
-    - Decision nodes must have at least one branch connected (future)
+    - Decision nodes must have at least one branch connected
+    - Each node's config must pass its own validate_config() check
     """
     errors: list[str] = []
     node_ids = {n.id for n in workflow.nodes}
@@ -81,6 +82,27 @@ def validate_workflow(workflow: WorkflowDefinition) -> None:
             f"Node '{nid}' (type: {node_type_map.get(nid)}) is disconnected — "
             "not reachable from any trigger node."
         )
+
+    # --- decision nodes: at least one branch must be connected ---
+    connected_handles = {(e.source_node_id, e.source_handle) for e in workflow.edges}
+    for node in workflow.nodes:
+        if node.type == "decision":
+            true_connected  = (node.id, "true")  in connected_handles
+            false_connected = (node.id, "false") in connected_handles
+            if not true_connected and not false_connected:
+                errors.append(
+                    f"Decision node '{node.id}' has neither True nor False branch connected. "
+                    "Connect at least one branch."
+                )
+
+    # --- per-node config validation ---
+    for node in workflow.nodes:
+        if node.type not in NODE_REGISTRY:
+            continue  # already reported above
+        try:
+            get_node(node.type, node.id, node.config).validate_config()
+        except (ValueError, TypeError) as exc:
+            errors.append(f"Node '{node.id}' ({node.type}): invalid configuration — {exc}")
 
     if errors:
         raise WorkflowValidationError(errors)

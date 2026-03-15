@@ -10,6 +10,7 @@ Branch routing for Decision nodes:
 
 from __future__ import annotations
 
+import asyncio
 from collections import deque
 from datetime import timedelta
 from typing import Any
@@ -79,7 +80,7 @@ class WorkflowOrchestrator:
                 duration_seconds = duration * 60 if unit == "minutes" else duration
                 wait_msg = f"Waiting {duration} {unit}…"
                 workflow.logger.info("Step %d — %s (wait) sleeping %ds", step, node_id, duration_seconds)
-                await workflow.sleep(timedelta(seconds=duration_seconds))
+                await asyncio.sleep(duration_seconds)
                 payload_store[node_id] = incoming
                 logs.append({
                     "step": step,

@@ -26,7 +26,7 @@ const DEFAULT_CONFIGS: Record<string, Record<string, unknown>> = {
   manual_trigger: { initial_payload: { message: 'hello', value: 42 } },
   webhook_trigger: {},
   transform_data: { transformation: 'uppercase', field: 'message', params: {} },
-  http_request: { url: '', method: 'GET', headers: {}, body: null },
+  http_request: { url: '', headers: {} },
   wait: { duration: 5, unit: 'seconds' },
   decision: { field: '', operator: 'equals', value: '' },
   end: {},

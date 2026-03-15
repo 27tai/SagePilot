@@ -44,12 +44,7 @@ function HttpRequestConfig({
   const [rawHeaders, setRawHeaders] = useState(
     JSON.stringify(config.headers ?? {}, null, 2),
   )
-  const [rawBody, setRawBody] = useState(
-    config.body ? JSON.stringify(config.body, null, 2) : '',
-  )
   const [headersError, setHeadersError] = useState('')
-  const [bodyError, setBodyError] = useState('')
-  const method = (config.method as string) ?? 'GET'
 
   function commitHeaders(value: string) {
     try {
@@ -61,24 +56,9 @@ function HttpRequestConfig({
     }
   }
 
-  function commitBody(value: string) {
-    if (!value.trim()) {
-      setBodyError('')
-      onChange({ ...config, body: null })
-      return
-    }
-    try {
-      const parsed = JSON.parse(value)
-      setBodyError('')
-      onChange({ ...config, body: parsed })
-    } catch {
-      setBodyError('Invalid JSON')
-    }
-  }
-
   return (
     <>
-      <Field label="URL">
+      <Field label="POST URL">
         <input
           className={INPUT_CLS}
           placeholder="https://api.example.com/endpoint"
@@ -87,18 +67,7 @@ function HttpRequestConfig({
         />
       </Field>
 
-      <Field label="Method">
-        <select
-          className={INPUT_CLS}
-          value={method}
-          onChange={(e) => onChange({ ...config, method: e.target.value })}
-        >
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-        </select>
-      </Field>
-
-      <Field label="Headers (JSON)">
+      <Field label="Headers (JSON, optional)">
         <textarea
           className={`${INPUT_CLS} min-h-[72px] resize-y font-mono text-xs`}
           value={rawHeaders}
@@ -109,19 +78,9 @@ function HttpRequestConfig({
         {headersError && <p className="text-xs text-red-500">{headersError}</p>}
       </Field>
 
-      {method === 'POST' && (
-        <Field label="Body (JSON)">
-          <textarea
-            className={`${INPUT_CLS} min-h-[80px] resize-y font-mono text-xs`}
-            placeholder="{}"
-            value={rawBody}
-            onChange={(e) => setRawBody(e.target.value)}
-            onBlur={(e) => commitBody(e.target.value)}
-            spellCheck={false}
-          />
-          {bodyError && <p className="text-xs text-red-500">{bodyError}</p>}
-        </Field>
-      )}
+      <div className="rounded-lg border border-dashed border-blue-200 p-2 text-xs text-blue-400">
+        The entire incoming payload is forwarded as the POST body.
+      </div>
     </>
   )
 }

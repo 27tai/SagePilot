@@ -1,20 +1,15 @@
 """
 HTTP Request node.
 
-Makes an outbound HTTP GET or POST request to a user-configured URL.
+POSTs the entire incoming payload as a JSON body to a configured URL.
 
 Config keys:
-  url     (str):          destination URL (required)
-  method  (str):          "GET" | "POST" (default: "GET")
-  headers (dict):         extra request headers (optional)
-  body    (dict):         JSON body for POST requests (optional)
+  url     (str):            destination URL (required)
+  headers (dict, optional): extra request headers
 
-The incoming payload is merged with the response so downstream nodes can
-access both the original data and the HTTP response.
-
-Output merges the incoming payload with:
-  http_status (int):  response status code
-  http_body   (any):  parsed JSON response body, or raw text on parse failure
+Output: incoming payload merged with:
+  http_status (int)  — response status code
+  http_body   (any)  — parsed JSON response body, or raw text on parse failure
 """
 
 from __future__ import annotations
@@ -32,26 +27,16 @@ class HttpRequestNode(BaseNode):
     def validate_config(self) -> None:
         if not self.config.get("url"):
             raise ValueError("HttpRequestNode: 'url' is required.")
-        method = self.config.get("method", "GET").upper()
-        if method not in ("GET", "POST"):
-            raise ValueError(
-                f"HttpRequestNode: unsupported method '{method}'. Use GET or POST."
-            )
 
     def execute(self, payload: dict[str, Any]) -> dict[str, Any]:
         self.validate_config()
 
         url: str = self.config["url"]
-        method: str = self.config.get("method", "GET").upper()
         headers: dict = self.config.get("headers") or {}
-        body: Any = self.config.get("body") or None
 
         try:
             with httpx.Client(timeout=30.0) as client:
-                if method == "GET":
-                    response = client.get(url, headers=headers)
-                else:
-                    response = client.post(url, json=body, headers=headers)
+                response = client.post(url, json=payload, headers=headers)
 
             try:
                 response_body = response.json()
