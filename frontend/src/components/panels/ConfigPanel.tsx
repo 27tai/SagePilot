@@ -1,8 +1,235 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useWorkflowStore } from '@/store/workflowStore'
 import type { TransformationType } from '@/types/workflow'
+
+// ── WebhookTrigger config ─────────────────────────────────────────────────
+function WebhookTriggerConfig({ workflowId }: { workflowId: string | null }) {
+  const url = workflowId
+    ? `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/api/webhooks/${workflowId}`
+    : '(save workflow first to get URL)'
+
+  return (
+    <Field label="Webhook URL (read-only)">
+      <div className="flex items-center gap-1">
+        <input
+          readOnly
+          className={`${INPUT_CLS} flex-1 select-all bg-gray-100 text-gray-500`}
+          value={url}
+        />
+        <button
+          type="button"
+          className="shrink-0 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-100"
+          onClick={() => navigator.clipboard.writeText(url)}
+        >
+          Copy
+        </button>
+      </div>
+      <p className="text-xs text-gray-400">
+        Send a POST request with a JSON body to trigger this workflow.
+      </p>
+    </Field>
+  )
+}
+
+// ── HttpRequest config ────────────────────────────────────────────────────
+function HttpRequestConfig({
+  config,
+  onChange,
+}: {
+  config: Record<string, unknown>
+  onChange: (c: Record<string, unknown>) => void
+}) {
+  const [rawHeaders, setRawHeaders] = useState(
+    JSON.stringify(config.headers ?? {}, null, 2),
+  )
+  const [rawBody, setRawBody] = useState(
+    config.body ? JSON.stringify(config.body, null, 2) : '',
+  )
+  const [headersError, setHeadersError] = useState('')
+  const [bodyError, setBodyError] = useState('')
+  const method = (config.method as string) ?? 'GET'
+
+  function commitHeaders(value: string) {
+    try {
+      const parsed = JSON.parse(value || '{}')
+      setHeadersError('')
+      onChange({ ...config, headers: parsed })
+    } catch {
+      setHeadersError('Invalid JSON')
+    }
+  }
+
+  function commitBody(value: string) {
+    if (!value.trim()) {
+      setBodyError('')
+      onChange({ ...config, body: null })
+      return
+    }
+    try {
+      const parsed = JSON.parse(value)
+      setBodyError('')
+      onChange({ ...config, body: parsed })
+    } catch {
+      setBodyError('Invalid JSON')
+    }
+  }
+
+  return (
+    <>
+      <Field label="URL">
+        <input
+          className={INPUT_CLS}
+          placeholder="https://api.example.com/endpoint"
+          value={(config.url as string) ?? ''}
+          onChange={(e) => onChange({ ...config, url: e.target.value })}
+        />
+      </Field>
+
+      <Field label="Method">
+        <select
+          className={INPUT_CLS}
+          value={method}
+          onChange={(e) => onChange({ ...config, method: e.target.value })}
+        >
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+        </select>
+      </Field>
+
+      <Field label="Headers (JSON)">
+        <textarea
+          className={`${INPUT_CLS} min-h-[72px] resize-y font-mono text-xs`}
+          value={rawHeaders}
+          onChange={(e) => setRawHeaders(e.target.value)}
+          onBlur={(e) => commitHeaders(e.target.value)}
+          spellCheck={false}
+        />
+        {headersError && <p className="text-xs text-red-500">{headersError}</p>}
+      </Field>
+
+      {method === 'POST' && (
+        <Field label="Body (JSON)">
+          <textarea
+            className={`${INPUT_CLS} min-h-[80px] resize-y font-mono text-xs`}
+            placeholder="{}"
+            value={rawBody}
+            onChange={(e) => setRawBody(e.target.value)}
+            onBlur={(e) => commitBody(e.target.value)}
+            spellCheck={false}
+          />
+          {bodyError && <p className="text-xs text-red-500">{bodyError}</p>}
+        </Field>
+      )}
+    </>
+  )
+}
+
+// ── Wait config ───────────────────────────────────────────────────────────
+function WaitConfig({
+  config,
+  onChange,
+}: {
+  config: Record<string, unknown>
+  onChange: (c: Record<string, unknown>) => void
+}) {
+  return (
+    <>
+      <Field label="Duration">
+        <input
+          type="number"
+          min={1}
+          className={INPUT_CLS}
+          value={(config.duration as number) ?? 5}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10)
+            onChange({ ...config, duration: isNaN(v) || v < 1 ? 1 : v })
+          }}
+        />
+      </Field>
+
+      <Field label="Unit">
+        <select
+          className={INPUT_CLS}
+          value={(config.unit as string) ?? 'seconds'}
+          onChange={(e) => onChange({ ...config, unit: e.target.value })}
+        >
+          <option value="seconds">Seconds</option>
+          <option value="minutes">Minutes</option>
+        </select>
+      </Field>
+
+      <div className="rounded-lg border border-dashed border-orange-200 p-2 text-xs text-orange-400">
+        Uses Temporal&apos;s durable timer — survives worker restarts.
+      </div>
+    </>
+  )
+}
+
+// ── Decision config ───────────────────────────────────────────────────────
+
+const OPERATORS = [
+  { value: 'equals',       label: 'equals' },
+  { value: 'not_equals',   label: 'not equals' },
+  { value: 'greater_than', label: 'greater than' },
+  { value: 'less_than',    label: 'less than' },
+  { value: 'contains',     label: 'contains' },
+  { value: 'is_empty',     label: 'is empty' },
+]
+
+function DecisionConfig({
+  config,
+  onChange,
+}: {
+  config: Record<string, unknown>
+  onChange: (c: Record<string, unknown>) => void
+}) {
+  const operator = (config.operator as string) ?? 'equals'
+
+  return (
+    <>
+      <Field label="Field to evaluate">
+        <input
+          className={INPUT_CLS}
+          placeholder="e.g. status"
+          value={(config.field as string) ?? ''}
+          onChange={(e) => onChange({ ...config, field: e.target.value })}
+        />
+      </Field>
+
+      <Field label="Operator">
+        <select
+          className={INPUT_CLS}
+          value={operator}
+          onChange={(e) => onChange({ ...config, operator: e.target.value })}
+        >
+          {OPERATORS.map((op) => (
+            <option key={op.value} value={op.value}>{op.label}</option>
+          ))}
+        </select>
+      </Field>
+
+      {operator !== 'is_empty' && (
+        <Field label="Compare value">
+          <input
+            className={INPUT_CLS}
+            placeholder="e.g. active"
+            value={(config.value as string) ?? ''}
+            onChange={(e) => onChange({ ...config, value: e.target.value })}
+          />
+        </Field>
+      )}
+
+      {/* Branch hint */}
+      <div className="rounded-lg border border-dashed border-gray-200 p-2 text-xs text-gray-400">
+        <p className="font-semibold text-gray-500">How to connect branches</p>
+        <p className="mt-1">Drag from the <span className="font-semibold text-emerald-600">✓ True</span> handle to connect the true path.</p>
+        <p className="mt-0.5">Drag from the <span className="font-semibold text-red-500">✗ False</span> handle to connect the false path.</p>
+      </div>
+    </>
+  )
+}
 
 const TRANSFORMATIONS: { value: TransformationType; label: string }[] = [
   { value: 'uppercase', label: 'Uppercase' },
@@ -149,7 +376,7 @@ function TransformDataConfig({
 
 // ── Main ConfigPanel ──────────────────────────────────────────────────────
 export default function ConfigPanel() {
-  const { nodes, selectedNodeId, updateNodeConfig } = useWorkflowStore()
+  const { nodes, selectedNodeId, updateNodeConfig, workflowId } = useWorkflowStore()
 
   const node = nodes.find((n) => n.id === selectedNodeId)
   if (!node) return null
@@ -177,8 +404,20 @@ export default function ConfigPanel() {
       {nodeType === 'manual_trigger' && (
         <ManualTriggerConfig config={config} onChange={handleChange} />
       )}
+      {nodeType === 'webhook_trigger' && (
+        <WebhookTriggerConfig workflowId={workflowId} />
+      )}
       {nodeType === 'transform_data' && (
         <TransformDataConfig config={config} onChange={handleChange} />
+      )}
+      {nodeType === 'http_request' && (
+        <HttpRequestConfig config={config} onChange={handleChange} />
+      )}
+      {nodeType === 'wait' && (
+        <WaitConfig config={config} onChange={handleChange} />
+      )}
+      {nodeType === 'decision' && (
+        <DecisionConfig config={config} onChange={handleChange} />
       )}
       {nodeType === 'end' && (
         <p className="text-sm text-gray-400">

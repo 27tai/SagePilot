@@ -9,7 +9,11 @@ export interface RFNodeData {
 
 const NODE_LABELS: Record<string, string> = {
   manual_trigger: 'Manual Trigger',
+  webhook_trigger: 'Webhook Trigger',
   transform_data: 'Transform Data',
+  http_request: 'HTTP Request',
+  wait: 'Wait',
+  decision: 'Decision',
   end: 'End',
 }
 
@@ -34,6 +38,10 @@ export function toRFEdges(edges: EdgeConfig[]): Edge[] {
     source: e.source_node_id,
     target: e.target_node_id,
     sourceHandle: e.source_handle ?? null,
+    style:
+      e.source_handle === 'true'  ? { stroke: '#22c55e', strokeWidth: 2 } :
+      e.source_handle === 'false' ? { stroke: '#ef4444', strokeWidth: 2 } :
+                                    { stroke: '#94a3b8', strokeWidth: 1.5 },
   }))
 }
 

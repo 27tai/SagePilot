@@ -1,4 +1,11 @@
-export type NodeType = 'manual_trigger' | 'transform_data' | 'end'
+export type NodeType =
+  | 'manual_trigger'
+  | 'webhook_trigger'
+  | 'transform_data'
+  | 'http_request'
+  | 'wait'
+  | 'decision'
+  | 'end'
 
 export type TransformationType =
   | 'uppercase'

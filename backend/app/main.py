@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.workflows import router as workflows_router
+from app.api.webhooks import router as webhooks_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ app.add_middleware(
 )
 
 app.include_router(workflows_router)
+app.include_router(webhooks_router)
 
 
 @app.get("/health")

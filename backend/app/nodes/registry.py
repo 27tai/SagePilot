@@ -9,18 +9,21 @@ To register a new node type, import its class and add one line here:
 
 from .base import BaseNode
 from .manual_trigger import ManualTriggerNode
+from .webhook_trigger import WebhookTriggerNode
 from .transform_data import TransformDataNode
+from .http_request import HttpRequestNode
+from .wait_node import WaitNode
 from .end_node import EndNode
+from .decision import DecisionNode
 
 NODE_REGISTRY: dict[str, type[BaseNode]] = {
     ManualTriggerNode.node_type: ManualTriggerNode,
+    WebhookTriggerNode.node_type: WebhookTriggerNode,
     TransformDataNode.node_type: TransformDataNode,
+    HttpRequestNode.node_type: HttpRequestNode,
+    WaitNode.node_type: WaitNode,
     EndNode.node_type: EndNode,
-    # future registrations go here:
-    # WebhookTriggerNode.node_type: WebhookTriggerNode,
-    # HttpRequestNode.node_type: HttpRequestNode,
-    # DecisionNode.node_type: DecisionNode,
-    # WaitNode.node_type: WaitNode,
+    DecisionNode.node_type: DecisionNode,
 }
 
 

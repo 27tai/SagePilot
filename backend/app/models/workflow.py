@@ -21,9 +21,12 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 NodeType = Literal[
     "manual_trigger",
+    "webhook_trigger",
     "transform_data",
+    "http_request",
+    "wait",
+    "decision",
     "end",
-    # future: "webhook_trigger", "http_request", "decision", "wait"
 ]
 
 

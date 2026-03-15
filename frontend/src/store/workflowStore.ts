@@ -24,14 +24,29 @@ import { fromRFNodes, fromRFEdges, toRFNodes, toRFEdges, type RFNodeData } from 
 
 const DEFAULT_CONFIGS: Record<string, Record<string, unknown>> = {
   manual_trigger: { initial_payload: { message: 'hello', value: 42 } },
+  webhook_trigger: {},
   transform_data: { transformation: 'uppercase', field: 'message', params: {} },
+  http_request: { url: '', method: 'GET', headers: {}, body: null },
+  wait: { duration: 5, unit: 'seconds' },
+  decision: { field: '', operator: 'equals', value: '' },
   end: {},
 }
 
 const NODE_LABELS: Record<string, string> = {
   manual_trigger: 'Manual Trigger',
+  webhook_trigger: 'Webhook Trigger',
   transform_data: 'Transform Data',
+  http_request: 'HTTP Request',
+  wait: 'Wait',
+  decision: 'Decision',
   end: 'End',
+}
+
+// Edge stroke colour based on which handle the connection came from
+function edgeStyle(sourceHandle?: string | null): React.CSSProperties {
+  if (sourceHandle === 'true')  return { stroke: '#22c55e', strokeWidth: 2 }
+  if (sourceHandle === 'false') return { stroke: '#ef4444', strokeWidth: 2 }
+  return { stroke: '#94a3b8', strokeWidth: 1.5 }
 }
 
 interface WorkflowStore {
@@ -98,7 +113,12 @@ export const useWorkflowStore = create<WorkflowStore>()(
         set({ edges: applyEdgeChanges(changes, get().edges) }),
 
       onConnect: (connection) =>
-        set({ edges: addEdge(connection, get().edges) }),
+        set({
+          edges: addEdge(
+            { ...connection, style: edgeStyle(connection.sourceHandle) },
+            get().edges,
+          ),
+        }),
 
       // ── Editor actions ──────────────────────────────────────────────
       addNode: (type, position) => {

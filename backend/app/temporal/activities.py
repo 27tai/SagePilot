@@ -50,11 +50,17 @@ async def execute_node_activity(params: dict[str, Any]) -> dict[str, Any]:
     try:
         node = get_node(node_type=node_type, node_id=node_id, config=config)
         output = node.execute(payload)
-        logger.info("Node %s completed successfully", node_id)
+
+        # Decision nodes inject _branch into the payload as a routing signal.
+        # Extract it here so it never reaches downstream nodes.
+        branch: str | None = output.pop("_branch", None) if isinstance(output, dict) else None
+
+        logger.info("Node %s completed successfully%s", node_id, f" → branch={branch}" if branch else "")
         return {
             "node_id": node_id,
             "node_type": node_type,
             "output_payload": output,
+            "branch": branch,   # "true" | "false" | None
             "error": None,
         }
     except NodeExecutionError as exc:

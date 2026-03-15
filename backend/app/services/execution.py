@@ -30,6 +30,7 @@ async def _get_temporal_client() -> Client:
 async def run_workflow(
     workflow: WorkflowDefinition,
     trigger_payload: dict[str, Any],
+    run_id: str | None = None,
 ) -> WorkflowResult:
     """
     Validate, submit to Temporal, await result, persist and return it.
@@ -39,7 +40,7 @@ async def run_workflow(
     # 1. Validate
     validate_workflow(workflow)
 
-    run_id = str(uuid.uuid4())
+    run_id = run_id or str(uuid.uuid4())
     task_queue = os.getenv("TEMPORAL_TASK_QUEUE", "workflow-engine")
 
     # 2. Connect and start workflow

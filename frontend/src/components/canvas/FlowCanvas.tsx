@@ -11,12 +11,20 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import { useWorkflowStore } from '@/store/workflowStore'
 import ManualTriggerNode from './nodes/ManualTriggerNode'
+import WebhookTriggerNode from './nodes/WebhookTriggerNode'
 import TransformDataNode from './nodes/TransformDataNode'
+import HttpRequestNode from './nodes/HttpRequestNode'
+import WaitNode from './nodes/WaitNode'
+import DecisionNode from './nodes/DecisionNode'
 import EndNode from './nodes/EndNode'
 
 const nodeTypes = {
   manual_trigger: ManualTriggerNode,
+  webhook_trigger: WebhookTriggerNode,
   transform_data: TransformDataNode,
+  http_request: HttpRequestNode,
+  wait: WaitNode,
+  decision: DecisionNode,
   end: EndNode,
 }
 
@@ -71,7 +79,11 @@ function FlowCanvasInner() {
       <MiniMap
         nodeColor={(n) => {
           if (n.type === 'manual_trigger') return '#8b5cf6'
+          if (n.type === 'webhook_trigger') return '#6366f1'
           if (n.type === 'transform_data') return '#06b6d4'
+          if (n.type === 'http_request') return '#3b82f6'
+          if (n.type === 'wait') return '#f97316'
+          if (n.type === 'decision') return '#f59e0b'
           if (n.type === 'end') return '#10b981'
           return '#94a3b8'
         }}
