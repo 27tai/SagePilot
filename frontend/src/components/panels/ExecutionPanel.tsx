@@ -104,15 +104,24 @@ export default function ExecutionPanel() {
 
       <hr className="border-gray-100" />
 
-      {/* Step logs */}
-      <p className="text-xs font-semibold text-gray-500">
-        Execution log ({executionResult.logs.length} steps)
-      </p>
-      <div className="flex flex-col gap-2">
-        {executionResult.logs.map((log) => (
-          <LogRow key={log.step} log={log} />
-        ))}
-      </div>
+      {/* Step logs — skipped (non-taken decision branches) are excluded */}
+      {(() => {
+        const visibleLogs = executionResult.logs.filter(
+          (log) => !log.message.startsWith('SKIPPED'),
+        )
+        return (
+          <>
+            <p className="text-xs font-semibold text-gray-500">
+              Execution log ({visibleLogs.length} steps)
+            </p>
+            <div className="flex flex-col gap-2">
+              {visibleLogs.map((log) => (
+                <LogRow key={log.step} log={log} />
+              ))}
+            </div>
+          </>
+        )
+      })()}
     </aside>
   )
 }

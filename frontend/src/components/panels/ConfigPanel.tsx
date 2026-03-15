@@ -95,7 +95,7 @@ function SendEmailConfig({
 }) {
   return (
     <>
-      <Field label="Recipient (To)">
+      <Field label='Fallback "To" address (optional)'>
         <input
           className={INPUT_CLS}
           type="email"
@@ -114,9 +114,11 @@ function SendEmailConfig({
         />
       </Field>
 
-      <div className="rounded-lg border border-dashed border-pink-200 p-2 text-xs text-pink-400">
-        The entire incoming payload is sent as the email body (formatted JSON).
-        SMTP credentials are configured via server environment variables.
+      <div className="rounded-lg border border-dashed border-pink-200 p-2 text-xs text-pink-400 space-y-1">
+        <p><span className="font-semibold text-pink-500">Recipient resolution:</span></p>
+        <p>1. <code className="bg-pink-50 px-1 rounded">email</code> key in the incoming payload (e.g. set it in the Manual Trigger)</p>
+        <p>2. Fallback "To" address above (if no payload email)</p>
+        <p className="pt-1">The full payload is sent as the email body.</p>
       </div>
     </>
   )

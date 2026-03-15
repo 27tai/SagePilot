@@ -5,7 +5,7 @@ import { Handle, Position, type NodeProps } from 'reactflow'
 import type { RFNodeData } from '@/lib/rfAdapters'
 
 function SendEmailNode({ data, selected }: NodeProps<RFNodeData>) {
-  const to = (data.config.to as string) || '(no recipient set)'
+  const to = (data.config.to as string) || 'from payload.email'
 
   return (
     <div

@@ -16,8 +16,14 @@ node config:
                                       log the email to stdout instead
 
 Config keys (stored in workflow):
-  to      (str): recipient email address (required)
+  to      (str): fallback recipient — used only when the incoming payload
+                 does not contain an "email" key (optional if payload provides it)
   subject (str): email subject (default: "Workflow Notification")
+
+Recipient resolution order:
+  1. payload["email"]  — set by an upstream node (e.g. Manual Trigger)
+  2. config["to"]      — static fallback configured on the node
+  If neither is present, execution raises NodeExecutionError.
 
 Output: incoming payload passed through unchanged, with an added key:
   email_sent (bool): True on success
@@ -41,14 +47,16 @@ logger = logging.getLogger(__name__)
 class SendEmailNode(BaseNode):
     node_type = "send_email"
 
-    def validate_config(self) -> None:
-        if not self.config.get("to"):
-            raise ValueError("SendEmailNode: 'to' (recipient address) is required.")
-
     def execute(self, payload: dict[str, Any]) -> dict[str, Any]:
-        self.validate_config()
+        # Payload email takes priority over the static config fallback
+        to: str = str(payload.get("email") or self.config.get("to") or "")
+        if not to:
+            raise NodeExecutionError(
+                "SendEmailNode: no recipient found. "
+                "Add an 'email' key to the trigger payload or set a fallback "
+                "address in the node's 'To' field."
+            )
 
-        to: str = self.config["to"]
         subject: str = self.config.get("subject") or "Workflow Notification"
 
         mock: bool = os.getenv("SMTP_MOCK", "false").lower() == "true"
